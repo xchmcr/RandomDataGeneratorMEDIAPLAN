@@ -22,17 +22,27 @@ def generate_random_data(num_records):
         'Length': [f"{random.choice([30, 60])} seconds" for _ in range(num_records)],
         'Days': [random.choice(days) for _ in range(num_records)],
         'Times': [random.choice(times) for _ in range(num_records)],
-        'Rate': [f"${random.randint(50, 150)}.00" for _ in range(num_records)],
+        'Rate': [random.randint(50, 150) for _ in range(num_records)],
         'Quantity': [random.randint(5, 20) for _ in range(num_records)],
-        'Cost': [f"${random.randint(500, 2000)}.00" for _ in range(num_records)],
-        'Revenue': [f"${random.randint(1000, 5000)}.00" for _ in range(num_records)],
-        'Profit': [f"${random.randint(500, 3000)}.00" for _ in range(num_records)],
-        'Margin': [f"{random.randint(50, 70)}%" for _ in range(num_records)],
-        'Revenue Per Cost': [f"${random.randint(50, 300)}.00" for _ in range(num_records)],
-        'Per Call': [f"${random.randint(10, 50)}.00" for _ in range(num_records)],
-        'Unique Calls': [random.randint(5, 20) for _ in range(num_records)],
     }
     
+    # Calculate Cost, Revenue, Profit, and other financial metrics based on the generated data
+    data['Cost'] = [round(data['Rate'][i] * data['Quantity'][i] * random.uniform(0.8, 1.2), 2) for i in range(num_records)]
+    data['Revenue'] = [round(data['Cost'][i] * random.uniform(1.5, 2.5), 2) for i in range(num_records)]
+    data['Profit'] = [round(data['Revenue'][i] - data['Cost'][i], 2) for i in range(num_records)]
+    data['Margin'] = [f"{round((data['Profit'][i] / data['Revenue'][i]) * 100, 2)}%" for i in range(num_records)]
+    data['Revenue Per Cost'] = [round(data['Revenue'][i] / data['Cost'][i], 2) for i in range(num_records)]
+    data['Per Call'] = [round(random.uniform(10, 50), 2) for _ in range(num_records)]
+    data['Unique Calls'] = [random.randint(5, 20) for _ in range(num_records)]
+    
+    # Convert numeric columns to formatted strings
+    data['Rate'] = [f"${rate}.00" for rate in data['Rate']]
+    data['Cost'] = [f"${cost}" for cost in data['Cost']]
+    data['Revenue'] = [f"${revenue}" for revenue in data['Revenue']]
+    data['Profit'] = [f"${profit}" for profit in data['Profit']]
+    data['Revenue Per Cost'] = [f"${rpc}" for rpc in data['Revenue Per Cost']]
+    data['Per Call'] = [f"${pc}" for pc in data['Per Call']]
+
     return pd.DataFrame(data)
 
 def submit_to_mongodb(df):
@@ -42,7 +52,7 @@ def submit_to_mongodb(df):
     client.admin.command('ping')
     print("Connection to MongoDB established successfully.")
     db = client['ReportSimulatorDatabase']
-    collection = db['ReportSimulatorCollection']
+    collection = db['UnrandomizedRepSimCollection']
 
     # Convert DataFrame to dictionary
     data_dict = df.to_dict(orient='records')
